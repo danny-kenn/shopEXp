@@ -1,7 +1,13 @@
 package com.kiamba.myfirebasemvvm.ui.theme.screens.products
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandIn
+import androidx.compose.animation.shrinkOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,11 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -36,6 +38,12 @@ import com.kiamba.myfirebasemvvm.navigation.ROUTE_PROFILE
 import com.kiamba.myfirebasemvvm.navigation.ROUTE_REGISTER
 import com.kiamba.myfirebasemvvm.navigation.ROUTE_UPDATE_PRODUCT
 import com.kiamba.myfirebasemvvm.navigation.ROUTE_VIEW_UPLOAD
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,16 +56,70 @@ fun ViewUploadsScreen(navController: NavHostController) {
 
     val uploads = productRepository.viewUploads(emptyUploadState, emptyUploadsListState)
 
+    // State for search query
+    val searchQuery = remember { mutableStateOf("") }
+
+    // Filtered uploads based on search query
+    val filteredUploads = remember(searchQuery.value) {
+        if (searchQuery.value.isEmpty()) {
+            uploads
+        } else {
+            uploads.filter {
+                it.name.contains(searchQuery.value, ignoreCase = true) ||
+                        it.quantity.contains(searchQuery.value, ignoreCase = true) ||
+                        it.price.contains(searchQuery.value, ignoreCase = true)
+            }
+        }
+    }
+
+    // State for search bar visibility
+    var isSearchExpanded by remember { mutableStateOf(false) }
+    val searchBarWidth by animateDpAsState(
+        targetValue = if (isSearchExpanded) 300.dp else 0.dp,
+        animationSpec = tween(durationMillis = 300)
+    )
+    val searchBarAlpha by animateFloatAsState(
+        targetValue = if (isSearchExpanded) 1f else 0f,
+        animationSpec = tween(durationMillis = 300)
+    )
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = "My Products",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 22.sp,
-                        color = Color.White
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        if (isSearchExpanded) {
+                            OutlinedTextField(
+                                value = searchQuery.value,
+                                onValueChange = { query -> searchQuery.value = query },
+                                label = { Text("Search Products") },
+                                modifier = Modifier
+                                    .width(searchBarWidth)
+                                    .alpha(searchBarAlpha)
+                                    .border(1.dp, Color.Black, RoundedCornerShape(8.dp)),
+                                keyboardOptions = KeyboardOptions.Default.copy(
+                                    imeAction = ImeAction.Search,
+                                    keyboardType = KeyboardType.Text
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onSearch = {
+                                        // Handle search action (optional)
+                                    }
+                                )
+                            )
+                        }
+                        Spacer(modifier = Modifier.weight(1f))
+                        IconButton(
+                            onClick = {
+                                isSearchExpanded = !isSearchExpanded
+                            }
+                        ) {
+                            Icon(Icons.Filled.Search, contentDescription = "Search", tint = Color.White)
+                        }
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
@@ -94,7 +156,7 @@ fun ViewUploadsScreen(navController: NavHostController) {
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     contentPadding = PaddingValues(24.dp)
                 ) {
-                    items(uploads) { upload ->
+                    items(filteredUploads) { upload ->
                         SlimUploadCard(
                             name = upload.name,
                             quantity = upload.quantity,
@@ -110,6 +172,7 @@ fun ViewUploadsScreen(navController: NavHostController) {
         }
     )
 }
+
 
 @Composable
 fun SlimUploadCard(
@@ -222,30 +285,23 @@ fun SlimUploadCard(
                         )
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFD32F2F), // Red color for the delete button
-                        contentColor = Color.White // White text color
-                    ),
-                    modifier = Modifier.weight(1f)
+                        containerColor = Color(0xFFB71C1C) // Red for delete
+                    )
                 ) {
-                    Icon(Icons.Default.Delete, contentDescription = "Delete")
-                    Text(text = "Delete")
+                    Text(text = "Delete", color = Color.White)
                 }
-
-                Spacer(modifier = Modifier.width(8.dp)) // Space between buttons
 
                 // Update Button
                 Button(
                     onClick = {
+                        // Navigate to update screen
                         navController.navigate("$ROUTE_UPDATE_PRODUCT/$id")
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF00695C), // Green for update action
-                        contentColor = Color.White
-                    ),
-                    modifier = Modifier.weight(1f) // Equal spacing for buttons
+                        containerColor = Color(0xFF004D40) // Dark teal for update
+                    )
                 ) {
-                    Icon(Icons.Default.Edit, contentDescription = "Update")
-                    Text(text = "Update")
+                    Text(text = "Update", color = Color.White)
                 }
             }
         }

@@ -64,19 +64,20 @@ fun HomeScreen(navController: NavHostController) {
             ) {
                 Text(
                     text = "Welcome to the Home Page",
-                    color = Color(0xFF333333), // Darker color for better readability
+                    color = Color(0xFF0B37BD),
                     fontSize = 28.sp,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(vertical = 16.dp)
                 )
 
-                // Add some cards or sections
+                // Add cards with custom container colors
                 HomeSection(
                     title = "Featured Products",
                     icon = Icons.Default.ShoppingCart,
                     description = "Check out our latest products.",
                     navController = navController,
-                    route = ROUTE_VIEW_UPLOAD
+                    route = ROUTE_VIEW_UPLOAD,
+                    Card = Color(0xFFDFF1FF) // Custom color for this section
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -86,7 +87,8 @@ fun HomeScreen(navController: NavHostController) {
                     icon = Icons.Default.AddCircle,
                     description = "Add new products to your store.",
                     navController = navController,
-                    route = ROUTE_ADD_PRODUCT
+                    route = ROUTE_ADD_PRODUCT,
+                    Card = Color(0xFF0B37BD) // Different custom color
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -96,7 +98,8 @@ fun HomeScreen(navController: NavHostController) {
                     icon = Icons.Default.Person,
                     description = "View and edit your profile.",
                     navController = navController,
-                    route = ROUTE_PROFILE
+                    route = ROUTE_PROFILE,
+                    Card = Color(0xFFFFE0E0) // Another color
                 )
             }
         },
@@ -141,13 +144,15 @@ fun HomeScreen(navController: NavHostController) {
     )
 }
 
+
 @Composable
 fun HomeSection(
     title: String,
     icon: ImageVector,
     description: String,
     navController: NavHostController,
-    route: String
+    route: String,
+    Card: Color = Color.Blue
 ) {
     Card(
         modifier = Modifier
