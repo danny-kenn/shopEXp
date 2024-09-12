@@ -58,6 +58,7 @@ fun RegisterScreen(navController: NavHostController) {
             value = name,
             onValueChange = { name = it },
             label = { Text(text = "Full Name") },
+            textStyle = LocalTextStyle.current.copy(color = Color.Black),
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
             modifier = Modifier
                 .fillMaxWidth(0.9f)
@@ -70,6 +71,7 @@ fun RegisterScreen(navController: NavHostController) {
             value = email,
             onValueChange = { email = it },
             label = { Text(text = "Email Address") },
+            textStyle = LocalTextStyle.current.copy(color = Color.Black),
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
             modifier = Modifier
                 .fillMaxWidth(0.9f)
@@ -82,6 +84,7 @@ fun RegisterScreen(navController: NavHostController) {
             value = password,
             onValueChange = { password = it },
             label = { Text(text = "Password") },
+            textStyle = LocalTextStyle.current.copy(color = Color.Black),
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
             modifier = Modifier
                 .fillMaxWidth(0.9f)
@@ -94,6 +97,7 @@ fun RegisterScreen(navController: NavHostController) {
             value = confirmPassword,
             onValueChange = { confirmPassword = it },
             label = { Text(text = "Confirm Password") },
+            textStyle = LocalTextStyle.current.copy(color = Color.Black),
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
             modifier = Modifier
                 .fillMaxWidth(0.9f)

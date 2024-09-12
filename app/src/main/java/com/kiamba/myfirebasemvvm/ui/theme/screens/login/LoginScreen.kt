@@ -56,6 +56,7 @@ fun LoginScreen(navController: NavHostController) {
             value = email,
             onValueChange = { email = it },
             label = { Text(text = "Email Address") },
+            textStyle = LocalTextStyle.current.copy(color = Color.Black),
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
             modifier = Modifier
                 .fillMaxWidth(0.9f)
@@ -68,6 +69,7 @@ fun LoginScreen(navController: NavHostController) {
             value = pass,
             onValueChange = { pass = it },
             label = { Text(text = "Password") },
+            textStyle = LocalTextStyle.current.copy(color = Color.Black),
             keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
             modifier = Modifier
                 .fillMaxWidth(0.9f)
