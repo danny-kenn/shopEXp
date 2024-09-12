@@ -117,7 +117,10 @@ fun ProductItem(
                 productRepository.deleteProduct(
                     id,
                     onSuccess = TODO()
-                )
+                ) {
+                    // Handle failure
+                    // You might want to show an error message
+                }
             }) {
                 Text(text = "Delete")
             }

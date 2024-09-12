@@ -64,7 +64,7 @@ fun UpdateProductScreen(
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color(0xFF6200EE)
+                    containerColor = Color(0xFF00695C)
                 )
             )
         },
@@ -148,7 +148,7 @@ fun UpdateProductScreen(
                             .fillMaxWidth()
                             .padding(top = 16.dp),
                         shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EE))
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00695C))
                     ) {
                         Text("Update Product", fontSize = 18.sp, color = Color.White)
                     }
@@ -182,7 +182,7 @@ fun ImagePickerComponent(
             Button(
                 onClick = { launcher.launch("image/*") },
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EE))
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00695C))
             ) {
                 Text("Change Image", color = Color.White)
             }
@@ -190,7 +190,7 @@ fun ImagePickerComponent(
             Button(
                 onClick = { launcher.launch("image/*") },
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EE))
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00695C))
             ) {
                 Text("Select Image", color = Color.White)
             }

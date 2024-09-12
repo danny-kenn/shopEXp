@@ -32,7 +32,6 @@ import com.kiamba.myfirebasemvvm.data.productviewmodel
 import com.kiamba.myfirebasemvvm.model.Upload
 import com.kiamba.myfirebasemvvm.navigation.ROUTE_ADD_PRODUCT
 import com.kiamba.myfirebasemvvm.navigation.ROUTE_HOME
-import com.kiamba.myfirebasemvvm.navigation.ROUTE_LOGIN
 import com.kiamba.myfirebasemvvm.navigation.ROUTE_PROFILE
 import com.kiamba.myfirebasemvvm.navigation.ROUTE_REGISTER
 import com.kiamba.myfirebasemvvm.navigation.ROUTE_UPDATE_PRODUCT
@@ -170,7 +169,7 @@ fun SlimUploadCard(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "Price: $$price",
+                        text = "Price: KSH$price",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF00695C),
@@ -184,9 +183,9 @@ fun SlimUploadCard(
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .size(120.dp)
+                        .size(150.dp)
                         .clip(RoundedCornerShape(16.dp)) // Rounded corners
-                        .background(Color.Gray) // Background in case image fails
+                        .background(Color.White) // Background in case image fails
                         .padding(8.dp) // Padding around the image for a cleaner look
                 )
             }
@@ -203,11 +202,22 @@ fun SlimUploadCard(
                 // Delete Button
                 Button(
                     onClick = {
+                        // Confirm deletion
+                        // Here, you might want to add a confirmation dialog before proceeding
                         productRepository.deleteProduct(
                             id,
                             onSuccess = {
+                                // Handle successful deletion
                                 // Navigate to ROUTE_VIEW_UPLOAD after successful deletion
-                                navController.navigate("ROUTE_VIEW_UPLOAD")
+                                navController.navigate(ROUTE_VIEW_UPLOAD) {
+                                    // Clear the back stack to avoid navigating back to the deleted item
+                                    popUpTo(ROUTE_VIEW_UPLOAD) { inclusive = true }
+                                }
+                            },
+                            onFailure = {
+                                // Handle failure
+                                var isDeleting = false
+                                // You might want to show an error message
                             }
                         )
                     },
@@ -220,7 +230,6 @@ fun SlimUploadCard(
                     Icon(Icons.Default.Delete, contentDescription = "Delete")
                     Text(text = "Delete")
                 }
-
 
                 Spacer(modifier = Modifier.width(8.dp)) // Space between buttons
 
@@ -240,13 +249,9 @@ fun SlimUploadCard(
                 }
             }
         }
-
-
-
-
-
     }
 }
+
 
 @Composable
 fun BottomNavigationBar(navController: NavHostController) {

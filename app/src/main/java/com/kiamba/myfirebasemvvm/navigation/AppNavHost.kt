@@ -61,8 +61,12 @@ fun AppNavHost(
         }
         composable(ROUTE_PROFILE) {
             val context = LocalContext.current
-            val viewModel = remember { AuthViewModel(navController = navController, context = context) }
-            ProfileScreen(viewModel = viewModel)
+            val viewModel =
+                remember { AuthViewModel(navController = navController, context = context) }
+            ProfileScreen(
+                viewModel = viewModel,
+                navController = navController
+            )
         }
 
 

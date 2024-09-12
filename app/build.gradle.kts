@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.play.services.analytics.impl)
     implementation(libs.firebase.storage.ktx)
     implementation(libs.play.services.cast.framework)
+    implementation(libs.engage.core)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

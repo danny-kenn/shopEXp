@@ -1,6 +1,7 @@
 package com.kiamba.myfirebasemvvm.data
 
 import android.content.Context
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.Composable
@@ -12,6 +13,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.storage.FirebaseStorage
 import com.kiamba.myfirebasemvvm.model.User
 import com.kiamba.myfirebasemvvm.navigation.ROUTE_HOME
 import com.kiamba.myfirebasemvvm.navigation.ROUTE_LOGIN
@@ -63,13 +65,19 @@ class AuthViewModel(
                         phone = null,  // Default to null or "" if no phone is provided during sign-up
                         profilePictureUrl = null  // Default to null or "" for profile picture during sign-up
                     )
-                    val regRef = FirebaseDatabase.getInstance().getReference("Users/${mAuth.currentUser!!.uid}")
+                    val regRef = FirebaseDatabase.getInstance()
+                        .getReference("Users/${mAuth.currentUser!!.uid}")
                     regRef.setValue(userData).addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            Toast.makeText(context, "Registered Successfully", Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, "Registered Successfully", Toast.LENGTH_LONG)
+                                .show()
                             navController.navigate(ROUTE_LOGIN)
                         } else {
-                            Toast.makeText(context, "${task.exception!!.message}", Toast.LENGTH_LONG).show()
+                            Toast.makeText(
+                                context,
+                                "${task.exception!!.message}",
+                                Toast.LENGTH_LONG
+                            ).show()
                         }
                     }
                 } else {
@@ -101,7 +109,7 @@ class AuthViewModel(
         }
     }
 
-    fun updateUserProfile(name: String, phone: String, profilePictureUrl: String) {
+    fun updateUserProfile(name: String, phone: String, email: String, profilePictureUrl: String) {
         val currentUser = mAuth.currentUser
         if (currentUser != null) {
             val userId = currentUser.uid
@@ -109,7 +117,7 @@ class AuthViewModel(
 
             val updatedUser = User(
                 name = name,
-                email = currentUser.email ?: "",
+                email = currentUser.email ?:"",
                 pass = "",  // Not updating password
                 confirmpass = "",  // Not updating password confirmation
                 userid = userId,
@@ -119,27 +127,50 @@ class AuthViewModel(
 
             userRef.setValue(updatedUser).addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    Toast.makeText(context, "Profile Updated Successfully", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Profile Updated Successfully", Toast.LENGTH_SHORT)
+                        .show()
                 } else {
                     Toast.makeText(context, "Profile Update Failed", Toast.LENGTH_SHORT).show()
                 }
             }
         }
     }
-}
 
+    // Function to upload profile picture to Firebase Storage
+    fun uploadProfilePicture(uri: Uri, onSuccess: (String) -> Unit) {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser != null) {
+            val storageRef = FirebaseStorage.getInstance().reference
+                .child("profile_pictures/${currentUser.uid}.jpg")
 
-// Method to update password
-fun updatePassword(newPassword: String) {
-    val user = FirebaseAuth.getInstance().currentUser
-    user?.updatePassword(newPassword)?.addOnCompleteListener { task ->
-        if (task.isSuccessful) {
-            // Handle success
-        } else {
-            // Handle failure
-            Log.e("AuthViewModel", "Password update failed", task.exception)
+            // Upload the image to Firebase Storage
+            storageRef.putFile(uri).addOnSuccessListener {
+                // Get the download URL once the upload is complete
+                storageRef.downloadUrl.addOnSuccessListener { downloadUri ->
+                    onSuccess(downloadUri.toString())  // Pass the download URL back to the caller
+                }
+            }.addOnFailureListener {
+                Log.e("AuthViewModel", "Failed to upload image", it)
+            }
         }
     }
+
+
+    // Method to update password
+    fun updatePassword(newPassword: String) {
+        val user = FirebaseAuth.getInstance().currentUser
+        user?.updatePassword(newPassword)?.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                Log.d("AuthViewModel", "Password updated successfully")
+            } else {
+                Log.e("AuthViewModel", "Password update failed", task.exception)
+            }
+        }
+    }
+
+
+
+
 }
 
 

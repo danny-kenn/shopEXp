@@ -77,7 +77,7 @@ class productviewmodel(var navController: NavHostController, var context: Contex
     }
 
     // Function to delete a product and associated image (if present)
-    fun deleteProduct(id: String, onSuccess: () -> Unit) {
+    fun deleteProduct(id: String, onSuccess: () -> Unit, onFailure: () -> Unit) {
         println("Attempting to delete product with id: $id")  // Debugging print
         getProductById(id) { product ->
             if (product != null) {

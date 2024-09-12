@@ -15,6 +15,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.kiamba.myfirebasemvvm.R
 import com.kiamba.myfirebasemvvm.navigation.ROUTE_HOME
+import com.kiamba.myfirebasemvvm.navigation.ROUTE_VIEW_UPLOAD
 import kotlinx.coroutines.delay
 
 @Composable
@@ -22,7 +23,7 @@ fun SplashScreen(navController: NavHostController) {
     // Delay for splash screen display
     LaunchedEffect(Unit) {
         delay(3000) // Show splash screen for 3 seconds
-        navController.navigate(ROUTE_HOME) { // Navigate to home screen
+        navController.navigate(ROUTE_VIEW_UPLOAD) { // Navigate to home screen
             popUpTo("splash") { inclusive = true }
         }
     }
@@ -39,7 +40,7 @@ fun SplashScreen(navController: NavHostController) {
                 .background(Color.White)
         ) {
             Image(
-                painter = painterResource(id = R.drawable.alibabacom),
+                painter = painterResource(id = R.drawable.default_profile_pic),
                 contentDescription = "SplashLogo",
                 modifier = Modifier.size(200.dp) // Adjust the size as needed
             )

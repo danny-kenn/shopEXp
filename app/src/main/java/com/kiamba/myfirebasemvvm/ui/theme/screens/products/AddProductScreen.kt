@@ -1,7 +1,6 @@
 package com.kiamba.myfirebasemvvm.ui.theme.screens.products
 
-import android.content.Context
-import android.content.res.Configuration
+
 import android.net.Uri
 import android.provider.MediaStore
 import android.widget.Toast
@@ -35,6 +34,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.kiamba.myfirebasemvvm.data.productviewmodel
 import com.kiamba.myfirebasemvvm.navigation.ROUTE_VIEW_PRODUCT
+import com.kiamba.myfirebasemvvm.navigation.ROUTE_VIEW_UPLOAD
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -185,7 +185,7 @@ fun AddProductScreen(navController: NavHostController, isUpdate: Boolean = false
                                 productPrice.text,
                                 imageUri!!
                             )
-                            navController.navigate(ROUTE_VIEW_PRODUCT)
+                            navController.navigate(ROUTE_VIEW_UPLOAD)
                         } else {
                             Toast.makeText(context, "Please select an image", Toast.LENGTH_SHORT).show()
                         }
