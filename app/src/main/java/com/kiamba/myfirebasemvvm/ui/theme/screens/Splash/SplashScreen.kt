@@ -23,7 +23,7 @@ fun SplashScreen(navController: NavHostController) {
     // Delay for splash screen display
     LaunchedEffect(Unit) {
         delay(3000) // Show splash screen for 3 seconds
-        navController.navigate(ROUTE_VIEW_UPLOAD) { // Navigate to home screen
+        navController.navigate(ROUTE_HOME) { // Navigate to home screen
             popUpTo("splash") { inclusive = true }
         }
     }
