@@ -1,7 +1,12 @@
 package com.kiamba.myfirebasemvvm.ui.theme.screens.products
 
-
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -30,48 +35,84 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.kiamba.myfirebasemvvm.data.productviewmodel
-import com.kiamba.myfirebasemvvm.navigation.ROUTE_VIEW_PRODUCT
 import com.kiamba.myfirebasemvvm.navigation.ROUTE_VIEW_UPLOAD
+import java.io.File
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddProductScreen(navController: NavHostController, isUpdate: Boolean = false) {
     val context = LocalContext.current
+    val activity = context as Activity
+
     var productName by remember { mutableStateOf(TextFieldValue("")) }
     var productQuantity by remember { mutableStateOf(TextFieldValue("")) }
     var productPrice by remember { mutableStateOf(TextFieldValue("")) }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var hasImage by remember { mutableStateOf(false) }
 
-    val imagePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
-        onResult = { uri ->
-            hasImage = uri != null
-            imageUri = uri
+    val REQUEST_CAMERA_PERMISSION = 100
+
+
+    // Check and request camera permissions
+    if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+        ActivityCompat.requestPermissions(activity, arrayOf(android.Manifest.permission.CAMERA), REQUEST_CAMERA_PERMISSION)
+    }
+
+    // Create a file to store the captured image
+    fun createImageFile(context: Context): File {
+        val storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        return File.createTempFile(
+            "IMG_${System.currentTimeMillis()}",
+            ".jpg",
+            storageDir
+        )
+    }
+
+    val takePictureLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture(),
+        onResult = { success ->
+            if (success) {
+                imageUri?.let {
+                    hasImage = true
+                }
+            } else {
+                Toast.makeText(context, "Image capture failed", Toast.LENGTH_SHORT).show()
+            }
         }
     )
 
-    // Main background and layout
+    val getImageLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri ->
+            if (uri != null) {
+                hasImage = true
+                imageUri = uri
+            }
+        }
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF0C0C0C)),
         contentAlignment = Alignment.TopCenter
     ) {
-        // Top navigation bar
         TopAppBar(
             title = {
                 Text(
-                    text =  "Add New Product",
+                    text = "Add New Product",
                     color = Color.White,
                     fontSize = 20.sp
                 )
             },
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color(0xFF00695C) // Set the background color here
+                containerColor = Color(0xFF00695C)
             ),
             navigationIcon = {
                 IconButton(onClick = { navController.popBackStack() }) {
@@ -80,17 +121,14 @@ fun AddProductScreen(navController: NavHostController, isUpdate: Boolean = false
             }
         )
 
-
-        // Inner content layout
         Column(
             modifier = Modifier
-                .padding(top = 150.dp, start = 20.dp, end = 20.dp, bottom = 20.dp) // Increased padding at the top to lower the card
+                .padding(top = 150.dp, start = 20.dp, end = 20.dp, bottom = 20.dp)
                 .fillMaxWidth()
                 .background(Color.White, shape = RoundedCornerShape(20.dp))
                 .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Title with a modern font and style
             Text(
                 text = "Add New Product",
                 fontSize = 28.sp,
@@ -101,7 +139,6 @@ fun AddProductScreen(navController: NavHostController, isUpdate: Boolean = false
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // Product fields
             OutlinedTextField(
                 value = productName,
                 onValueChange = { productName = it },
@@ -138,7 +175,6 @@ fun AddProductScreen(navController: NavHostController, isUpdate: Boolean = false
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Image picker with a circular image preview
             if (hasImage && imageUri != null) {
                 val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, imageUri)
                 Image(
@@ -154,9 +190,23 @@ fun AddProductScreen(navController: NavHostController, isUpdate: Boolean = false
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Button to select image
+//            OutlinedButton(
+//                onClick = {
+//                    val file = createImageFile(context)
+//                    imageUri = Uri.fromFile(file)
+//                    takePictureLauncher.launch(Image())
+//                },
+//                colors = ButtonDefaults.buttonColors(Color(0xFF64B5F6)),
+//                shape = RoundedCornerShape(16.dp),
+//                modifier = Modifier.fillMaxWidth()
+//            ) {
+//                Text(text = "Camera", fontSize = 30.sp, color = Color.White)
+//            }
+
+            Spacer(modifier = Modifier.height(40.dp))
+
             Button(
-                onClick = { imagePicker.launch("image/*") },
+                onClick = { getImageLauncher.launch("image/*") },
                 colors = ButtonDefaults.buttonColors(Color(0xFF00695C)),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
@@ -168,7 +218,6 @@ fun AddProductScreen(navController: NavHostController, isUpdate: Boolean = false
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Save and upload button
             Button(
                 onClick = {
                     if (productName.text.trim().isNotEmpty() && productQuantity.text.trim().isNotEmpty() && productPrice.text.trim().isNotEmpty()) {
@@ -204,6 +253,10 @@ fun AddProductScreen(navController: NavHostController, isUpdate: Boolean = false
         }
     }
 }
+
+
+
+
 
 @Preview(showBackground = true)
 @Composable

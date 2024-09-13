@@ -39,6 +39,12 @@ fun UpdateProductScreen(
     var quantity by remember { mutableStateOf("") }
     var price by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
+
+    var nameChanged by remember { mutableStateOf(false) }
+    var quantityChanged by remember { mutableStateOf(false) }
+    var priceChanged by remember { mutableStateOf(false) }
+    var imageChanged by remember { mutableStateOf(false) }
+
     val isLoading = remember { mutableStateOf(true) }
 
     // Fetch product details
@@ -83,12 +89,15 @@ fun UpdateProductScreen(
                     // Product Name TextField
                     TextField(
                         value = name,
-                        textStyle = LocalTextStyle.current.copy(color = Color.Black),
-                        onValueChange = { name = it },
+                        onValueChange = {
+                            name = it
+                            nameChanged = true
+                        },
                         label = { Text("Product Name") },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 16.dp),
+                        textStyle = LocalTextStyle.current.copy(color = Color.Black),
                         colors = TextFieldDefaults.textFieldColors(
                             containerColor = Color.White,
                             focusedLabelColor = Color(0xFF6200EE)
@@ -98,12 +107,15 @@ fun UpdateProductScreen(
                     // Quantity TextField
                     TextField(
                         value = quantity,
-                        textStyle = LocalTextStyle.current.copy(color = Color.Black),
-                        onValueChange = { quantity = it },
+                        onValueChange = {
+                            quantity = it
+                            quantityChanged = true
+                        },
                         label = { Text("Quantity") },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 16.dp),
+                        textStyle = LocalTextStyle.current.copy(color = Color.Black),
                         colors = TextFieldDefaults.textFieldColors(
                             containerColor = Color.White,
                             focusedLabelColor = Color(0xFF6200EE)
@@ -113,12 +125,15 @@ fun UpdateProductScreen(
                     // Price TextField
                     TextField(
                         value = price,
-                        textStyle = LocalTextStyle.current.copy(color = Color.Black),
-                        onValueChange = { price = it },
+                        onValueChange = {
+                            price = it
+                            priceChanged = true
+                        },
                         label = { Text("Price") },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 16.dp),
+                        textStyle = LocalTextStyle.current.copy(color = Color.Black),
                         colors = TextFieldDefaults.textFieldColors(
                             containerColor = Color.White,
                             focusedLabelColor = Color(0xFF6200EE)
@@ -126,22 +141,39 @@ fun UpdateProductScreen(
                     )
 
                     // Image Picker
-                    ImagePickerComponent(imageUri, onImageUriSelected = { uri -> imageUri = uri })
+                    ImagePickerComponent(
+                        imageUri = imageUri,
+                        onImageUriSelected = {
+                            imageUri = it
+                            imageChanged = true
+                        }
+                    )
 
                     // Update Product Button
                     Button(
                         onClick = {
-                            if (name.isNotEmpty() && quantity.isNotEmpty() && price.isNotEmpty()) {
-                                if (imageUri != null) {
-                                    productRepository.updateProductWithImage(name, quantity, price, imageUri!!, Id)
+                            if (nameChanged || quantityChanged || priceChanged || imageChanged) {
+                                if (imageChanged && imageUri != null) {
+                                    productRepository.updateProductWithImage(
+                                        if (nameChanged) name else null,
+                                        if (quantityChanged) quantity else null,
+                                        if (priceChanged) price else null,
+                                        imageUri!!,
+                                        Id
+                                    )
                                 } else {
-                                    productRepository.updateProduct(name, quantity, price, Id)
+                                    productRepository.updateProduct(
+                                        if (nameChanged) name else null,
+                                        if (quantityChanged) quantity else null,
+                                        if (priceChanged) price else null,
+                                        Id
+                                    )
                                 }
                                 navController.navigate(ROUTE_VIEW_UPLOAD) {
                                     popUpTo(navController.graph.startDestinationId) { inclusive = true }
                                 }
                             } else {
-                                Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "No changes made", Toast.LENGTH_SHORT).show()
                             }
                         },
                         modifier = Modifier

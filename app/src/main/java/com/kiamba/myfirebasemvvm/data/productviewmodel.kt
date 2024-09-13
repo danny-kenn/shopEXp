@@ -1,11 +1,16 @@
 package com.kiamba.myfirebasemvvm.data
 
+import android.app.Activity
 import android.app.ProgressDialog
 import android.content.Context
 import android.net.Uri
+import android.os.Environment
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.core.content.FileProvider
 import androidx.navigation.NavHostController
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -17,9 +22,14 @@ import com.kiamba.myfirebasemvvm.model.Upload
 import com.kiamba.myfirebasemvvm.navigation.ROUTE_LOGIN
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
 class productviewmodel(var navController: NavHostController, var context: Context) {
+
     var authRepository: AuthViewModel
     var progress: ProgressDialog
 
@@ -32,6 +42,8 @@ class productviewmodel(var navController: NavHostController, var context: Contex
         progress.setTitle("Loading")
         progress.setMessage("Please wait...")
     }
+
+
 
 
     fun saveProduct(productName: String, productQuantity: String, productPrice: String) {
@@ -141,20 +153,68 @@ class productviewmodel(var navController: NavHostController, var context: Contex
 
 
 
-    fun updateProduct(name: String, quantity: String, price: String, id: String) {
-        val databaseRef = FirebaseDatabase.getInstance().getReference("Uploads/$id")
-        val updatedProduct = Product(name, quantity, price, id)
-        progress.show()
+    fun updateProduct(
+        name: String?, quantity: String?, price: String?, id: String
+    ) {
+        val updates = mutableMapOf<String, Any>()
 
-        databaseRef.setValue(updatedProduct).addOnCompleteListener { task ->
+        if (name != null) updates["name"] = name
+        if (quantity != null) updates["quantity"] = quantity
+        if (price != null) updates["price"] = price
+
+        val databaseRef = FirebaseDatabase.getInstance().getReference("Uploads/$id")
+
+        progress.show()
+        databaseRef.updateChildren(updates).addOnCompleteListener { task ->
             progress.dismiss()
             if (task.isSuccessful) {
-                Toast.makeText(context, "Update successful", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Product updated successfully", Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(context, task.exception?.message, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Error: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
+
+    fun updateProductWithImage(
+        name: String?, quantity: String?, price: String?, imageUri: Uri, id: String
+    ) {
+        val storageRef = FirebaseStorage.getInstance().getReference("Uploads/$id")
+
+        val updates = mutableMapOf<String, Any>()
+
+        if (name != null) updates["name"] = name
+        if (quantity != null) updates["quantity"] = quantity
+        if (price != null) updates["price"] = price
+
+        val uploadTask = storageRef.putFile(imageUri)
+        uploadTask.continueWithTask { task ->
+            if (!task.isSuccessful) {
+                task.exception?.let { throw it }
+            }
+            storageRef.downloadUrl
+        }.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val downloadUri = task.result
+                updates["imageUrl"] = downloadUri.toString()
+
+                // Update product details
+                val databaseRef = FirebaseDatabase.getInstance().getReference("Uploads/$id")
+                databaseRef.updateChildren(updates).addOnCompleteListener { updateTask ->
+                    progress.dismiss()
+                    if (updateTask.isSuccessful) {
+                        Toast.makeText(context, "Product updated successfully", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(context, "Error: ${updateTask.exception?.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } else {
+                progress.dismiss()
+                Toast.makeText(context, "Failed to upload image", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+
 
 
     fun saveProductWithImage(
@@ -231,87 +291,6 @@ class productviewmodel(var navController: NavHostController, var context: Contex
     }
 
 
-    fun updateProductWithImage(
-        productName: String,
-        productQuantity: String,
-        productPrice: String,
-        imageUri: Uri?,
-        id: String
-    ) {
-        val storageReference = FirebaseStorage.getInstance().getReference("Uploads/$id")
-
-        // If an image is selected, upload it and update the product details
-        if (imageUri != null) {
-            progress.show()
-
-            storageReference.putFile(imageUri).addOnCompleteListener { task ->
-                progress.dismiss()
-                if (task.isSuccessful) {
-                    storageReference.downloadUrl.addOnSuccessListener { uri ->
-                        val imageUrl = uri.toString()
-
-                        // Create the updated product object with the new image URL
-                        val updatedProduct =
-                            Upload(productName, productQuantity, productPrice, imageUrl, id)
-
-                        // Update the product in Firebase Realtime Database
-                        val uploadRef = FirebaseDatabase.getInstance().getReference("Uploads/$id")
-                        uploadRef.setValue(updatedProduct).addOnCompleteListener { updateTask ->
-                            if (updateTask.isSuccessful) {
-                                Toast.makeText(context, "Update successful", Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(
-                                    context,
-                                    updateTask.exception?.message,
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        }
-                    }
-                } else {
-                    Toast.makeText(context, task.exception?.message, Toast.LENGTH_SHORT).show()
-                }
-            }
-        } else {
-            // If no image is selected, fetch the existing image URL and update the other details
-            val uploadRef = FirebaseDatabase.getInstance().getReference("Uploads/$id")
-            uploadRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    val existingProduct = snapshot.getValue(Upload::class.java)
-                    if (existingProduct != null) {
-                        // Use the existing imageUrl for the update
-                        val updatedProduct = Upload(
-                            productName,
-                            productQuantity,
-                            productPrice,
-                            existingProduct.imageUrl, // Keep the existing image URL
-                            id
-                        )
-
-                        // Update the product in the database
-                        uploadRef.setValue(updatedProduct).addOnCompleteListener { updateTask ->
-                            if (updateTask.isSuccessful) {
-                                Toast.makeText(context, "Update successful", Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(
-                                    context,
-                                    updateTask.exception?.message,
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        }
-                    } else {
-                        Toast.makeText(context, "Product not found", Toast.LENGTH_SHORT).show()
-                    }
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    Toast.makeText(context, "Failed to retrieve product data", Toast.LENGTH_SHORT).show()
-                }
-            })
-        }
-    }
-
 
 
     fun getProductById(id: String, onResult: (Upload?) -> Unit) {
@@ -347,4 +326,35 @@ class productviewmodel(var navController: NavHostController, var context: Contex
             }
         })
     }
+
+    fun saveProductWithCapturedImage(
+        productName: String,
+        productQuantity: String,
+        productPrice: String,
+        imageUri: Uri // Image URI from the camera
+    ) {
+        val id = System.currentTimeMillis().toString()
+        val storageReference = FirebaseStorage.getInstance().getReference().child("Uploads/$id")
+        progress.show()
+
+        storageReference.putFile(imageUri).addOnCompleteListener {
+            progress.dismiss()
+            if (it.isSuccessful) {
+                // Proceed to store other data into the db
+                storageReference.downloadUrl.addOnSuccessListener { uri ->
+                    val imageUrl = uri.toString()
+                    val uploadData = Upload(
+                        productName, productQuantity, productPrice, imageUrl, id
+                    )
+                    val dbRef = FirebaseDatabase.getInstance().getReference().child("Uploads/$id")
+                    dbRef.setValue(uploadData)
+                    Toast.makeText(context, "Upload successful", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Toast.makeText(context, it.exception!!.message, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+
 }
